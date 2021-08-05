@@ -28,13 +28,13 @@ public class WordCountDriver {
         job.setReducerClass(WordCountReducer.class);
         // step4. 设置 map 输出的 K，V 类型
         job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(IntWritable.class);
         // step5. 设置最终的 K，V 类型
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         // step6. 设置输入路径和输出路径
-        FileInputFormat.setInputPaths(job, new Path("E:\\IDEAProjects\\bigdata\\input.txt"));
-        FileOutputFormat.setOutputPath(job, new Path("E:\\IDEAProjects\\bigdata\\output.txt"));
+        FileInputFormat.setInputPaths(job, new Path("C:\\IDEAWorkSpace\\hechengyao\\wcInput.txt"));
+        FileOutputFormat.setOutputPath(job, new Path("C:\\IDEAWorkSpace\\hechengyao\\wcOutput.txt"));
         // step7. 提交 job
         boolean result = job.waitForCompletion(true);
         System.exit(result ? 0 : 1);
