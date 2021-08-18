@@ -34,7 +34,7 @@ public class WordCountDriver {
         job.setOutputValueClass(IntWritable.class);
         // step6. 设置输入路径和输出路径
         FileInputFormat.setInputPaths(job, new Path("C:\\IDEAWorkSpace\\hechengyao\\wcInput.txt"));
-        FileOutputFormat.setOutputPath(job, new Path("C:\\IDEAWorkSpace\\hechengyao\\wcOutput.txt"));
+        FileOutputFormat.setOutputPath(job, new Path("C:\\IDEAWorkSpace\\hechengyao\\wcOutput"));
         // step7. 提交 job
         boolean result = job.waitForCompletion(true);
         System.exit(result ? 0 : 1);
