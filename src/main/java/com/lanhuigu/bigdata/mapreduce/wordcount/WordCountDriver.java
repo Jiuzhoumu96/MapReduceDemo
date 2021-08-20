@@ -10,6 +10,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * @author: HeChengyao
@@ -18,16 +19,18 @@ import java.io.IOException;
 
 public class WordCountDriver {
 
+    // private static String USER_KEY = "hadoop"; //用户key
+    private static final String commandHead = "kinit -kt ";
+    private static String KEY_TAB_PATH = "/opt/beh/metadata/key/hadoop.keytab";// keytab文件
+    private static String INPUT_PATH = "hdfs://beh001/tmp/wcInput.txt"; // 输入路径
+    private static String OUTPUT_PATH = "hdfs://beh001/tmp/output/mapReduceOutput"; // 输出路径
+    private static final String MAPREDUCE_JOB_QUEUE_NAME = "mapreduce.job.queuename";
+    private static String QUEUE_NAME = "default";
     private static Logger logger = Logger.getLogger(WordCountDriver.class);
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-
         logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        int argsLen = args.length;
-        logger.info(">>>>>> args.length = " + argsLen);
-        for (int i = 0; i < argsLen; i++) {
-            logger.info(">>>>>> args[" + i + "] = " + args[i]);
-        }
+        argsDealing(args);
         // step1. 获取 job
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf);
@@ -42,14 +45,38 @@ public class WordCountDriver {
         // step5. 设置最终的 K，V 类型
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
-        // 根据dolphinscheduler的需要，将mapreduce的队列作为第一个参数
-        job.getConfiguration().set("mapreduce.job.queuename", args[0]);
-        // step6. 设置输入路径和输出路径
-        FileInputFormat.setInputPaths(job, new Path(args[1]));
-        FileOutputFormat.setOutputPath(job, new Path(args[2]));
+
+
+        // 设置队列
+        job.getConfiguration().set(MAPREDUCE_JOB_QUEUE_NAME, QUEUE_NAME);
+
+        FileInputFormat.setInputPaths(job, new Path(INPUT_PATH));
+        FileOutputFormat.setOutputPath(job, new Path(OUTPUT_PATH));
         // step7. 提交 job
         boolean result = job.waitForCompletion(true);
         System.exit(result ? 0 : 1);
+
+    }
+
+    public static void argsDealing(String[] args) {
+
+        int argsLen = args.length;
+        logger.info(">>>>>> args.length = " + argsLen);
+        for (int i = 0; i < argsLen; i++) {
+            logger.info(">>>>>> args[" + i + "] = " + args[i]);
+        }
+        // 以"-D"开头的参数会被筛选到过滤器中来，然后针对过滤器中的参数进行字符串操作
+        Arrays.stream(args).filter(arg -> arg.startsWith("-D")).forEach(arg -> {
+            String key = arg.substring(2, arg.indexOf("="));
+            String value = arg.substring(arg.indexOf("=") + 1);
+            logger.info(">>>>>> key = " + key + ", value = " + value);
+            System.setProperty(key, value);
+        });
+        // 参数的个数少于两个会提示参数不正确，并退出程序。
+        if (2 > args.length) {
+            logger.error("Invalid params number: " + args.length);
+            System.exit(1);
+        }
 
     }
 
