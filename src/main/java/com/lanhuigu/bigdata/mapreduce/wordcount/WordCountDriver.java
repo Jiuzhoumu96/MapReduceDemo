@@ -19,20 +19,34 @@ import java.util.Arrays;
 
 public class WordCountDriver {
 
-    // private static String USER_KEY = "hadoop"; //用户key
-    private static final String commandHead = "kinit -kt ";
-    private static String KEY_TAB_PATH = "/opt/beh/metadata/key/hadoop.keytab";// keytab文件
-    private static String INPUT_PATH = "hdfs://beh001/tmp/wcInput.txt"; // 输入路径
-    private static String OUTPUT_PATH = "hdfs://beh001/tmp/output/mapReduceOutput"; // 输出路径
-    private static final String MAPREDUCE_JOB_QUEUE_NAME = "mapreduce.job.queuename";
-    private static String QUEUE_NAME = "default";
+    /**
+     * kerberos认证配置
+     */
+    private static final String JAVA_KRB5_DEBUG = "sun.security.krb5.debug";
+    public static final String JAVA_SECURITY_KRB5_CONF = "java.security.krb5.conf";
+    public static final String PRINCIPAL = "security.kerberos.login.principal";
+    public static final String KEYTAB = "security.kerberos.login.keytab";
     private static Logger logger = Logger.getLogger(WordCountDriver.class);
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+
         logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        argsDealing(args);
         // step1. 获取 job
         Configuration conf = new Configuration();
+
+        argsDealing(args);
+        String krbFile = args[1];
+        String userKeyTableFile = args[2];
+        final String PRINCIPAL = args[3];
+
+        logger.info(">>>>>> krbFile = " + krbFile);
+        logger.info(">>>>>> userKeyTableFile = " + userKeyTableFile);
+        logger.info(">>>>>> PRINCIPAL = " + PRINCIPAL);
+        LoginUtil.login(PRINCIPAL, userKeyTableFile, krbFile, conf);
+
+
+
+
         Job job = Job.getInstance(conf);
         // step2. 设置 jar 包路径
         job.setJarByClass(WordCountDriver.class);
@@ -48,8 +62,9 @@ public class WordCountDriver {
 
 
         // 设置队列
-        job.getConfiguration().set(MAPREDUCE_JOB_QUEUE_NAME, QUEUE_NAME);
-
+        // job.getConfiguration().set(MAPREDUCE_JOB_QUEUE_NAME, QUEUE_NAME);
+        String INPUT_PATH = args[args.length - 2];
+        String OUTPUT_PATH = args[args.length - 1];
         FileInputFormat.setInputPaths(job, new Path(INPUT_PATH));
         FileOutputFormat.setOutputPath(job, new Path(OUTPUT_PATH));
         // step7. 提交 job

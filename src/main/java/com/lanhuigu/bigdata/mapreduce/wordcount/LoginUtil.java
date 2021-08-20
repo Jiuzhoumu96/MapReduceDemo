@@ -13,21 +13,17 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class LoginUtil
-{
-    public enum Module
-    {
+public class LoginUtil {
+    public enum Module {
         STORM("StormClient"), KAFKA("KafkaClient"), ZOOKEEPER("Client");
 
         private String name;
 
-        private Module(String name)
-        {
+        private Module(String name) {
             this.name = name;
         }
 
-        public String getName()
-        {
+        public String getName() {
             return name;
         }
     }
@@ -81,54 +77,45 @@ public class LoginUtil
     private static final boolean IS_IBM_JDK = System.getProperty("java.vendor").contains("IBM");
 
     public synchronized static void login(String userPrincipal, String userKeytabPath, String krb5ConfPath, Configuration conf)
-            throws IOException
-    {
+            throws IOException {
         // 1.check input parameters
-        if ((userPrincipal == null) || (userPrincipal.length() <= 0))
-        {
+        if ((userPrincipal == null) || (userPrincipal.length() <= 0)) {
             LOG.error("input userPrincipal is invalid.");
             throw new IOException("input userPrincipal is invalid.");
         }
 
-        if ((userKeytabPath == null) || (userKeytabPath.length() <= 0))
-        {
+        if ((userKeytabPath == null) || (userKeytabPath.length() <= 0)) {
             LOG.error("input userKeytabPath is invalid.");
             throw new IOException("input userKeytabPath is invalid.");
         }
 
-        if ((krb5ConfPath == null) || (krb5ConfPath.length() <= 0))
-        {
+        if ((krb5ConfPath == null) || (krb5ConfPath.length() <= 0)) {
             LOG.error("input krb5ConfPath is invalid.");
             throw new IOException("input krb5ConfPath is invalid.");
         }
 
-        if ((conf == null))
-        {
+        if ((conf == null)) {
             LOG.error("input conf is invalid.");
             throw new IOException("input conf is invalid.");
         }
 
         // 2.check file exsits
         File userKeytabFile = new File(userKeytabPath);
-        if (!userKeytabFile.exists())
-        {
+        if (!userKeytabFile.exists()) {
             LOG.error("userKeytabFile(" + userKeytabFile.getAbsolutePath() + ") does not exsit.");
             throw new IOException("userKeytabFile(" + userKeytabFile.getAbsolutePath() + ") does not exsit.");
         }
-        if (!userKeytabFile.isFile())
-        {
+        if (!userKeytabFile.isFile()) {
             LOG.error("userKeytabFile(" + userKeytabFile.getAbsolutePath() + ") is not a file.");
             throw new IOException("userKeytabFile(" + userKeytabFile.getAbsolutePath() + ") is not a file.");
         }
 
         File krb5ConfFile = new File(krb5ConfPath);
-        if (!krb5ConfFile.exists())
-        {
+        if (!krb5ConfFile.exists()) {
             LOG.error("krb5ConfFile(" + krb5ConfFile.getAbsolutePath() + ") does not exsit.");
             throw new IOException("krb5ConfFile(" + krb5ConfFile.getAbsolutePath() + ") does not exsit.");
         }
-        if (!krb5ConfFile.isFile())
-        {
+        if (!krb5ConfFile.isFile()) {
             LOG.error("krb5ConfFile(" + krb5ConfFile.getAbsolutePath() + ") is not a file.");
             throw new IOException("krb5ConfFile(" + krb5ConfFile.getAbsolutePath() + ") is not a file.");
         }
@@ -147,29 +134,22 @@ public class LoginUtil
     }
 
     private static boolean checkNeedLogin(String principal)
-            throws IOException
-    {
-        if (!UserGroupInformation.isSecurityEnabled())
-        {
+            throws IOException {
+        if (!UserGroupInformation.isSecurityEnabled()) {
             LOG.error("UserGroupInformation is not SecurityEnabled, please check if core-site.xml exists in classpath.");
             throw new IOException(
                     "UserGroupInformation is not SecurityEnabled, please check if core-site.xml exists in classpath.");
         }
         UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
-        if ((currentUser != null) && (currentUser.hasKerberosCredentials()))
-        {
-            if (checkCurrentUserCorrect(principal))
-            {
+        if ((currentUser != null) && (currentUser.hasKerberosCredentials())) {
+            if (checkCurrentUserCorrect(principal)) {
                 LOG.info("current user is " + currentUser + "has logined.");
-                if (!currentUser.isFromKeytab())
-                {
+                if (!currentUser.isFromKeytab()) {
                     LOG.error("current user is not from keytab.");
                     throw new IOException("current user is not from keytab.");
                 }
                 return false;
-            }
-            else
-            {
+            } else {
                 LOG.error("current user is " + currentUser + "has logined. please check your enviroment , especially when it used IBM JDK or kerberos for OS count login!!");
                 throw new IOException("current user is " + currentUser + " has logined. And please check your enviroment!!");
             }
@@ -179,25 +159,21 @@ public class LoginUtil
     }
 
     public static void setKrb5Config(String krb5ConfFile)
-            throws IOException
-    {
+            throws IOException {
         System.setProperty(JAVA_SECURITY_KRB5_CONF_KEY, krb5ConfFile);
         String ret = System.getProperty(JAVA_SECURITY_KRB5_CONF_KEY);
-        if (ret == null)
-        {
+        if (ret == null) {
             LOG.error(JAVA_SECURITY_KRB5_CONF_KEY + " is null.");
             throw new IOException(JAVA_SECURITY_KRB5_CONF_KEY + " is null.");
         }
-        if (!ret.equals(krb5ConfFile))
-        {
+        if (!ret.equals(krb5ConfFile)) {
             LOG.error(JAVA_SECURITY_KRB5_CONF_KEY + " is " + ret + " is not " + krb5ConfFile + ".");
             throw new IOException(JAVA_SECURITY_KRB5_CONF_KEY + " is " + ret + " is not " + krb5ConfFile + ".");
         }
     }
 
     public static void setJaasFile(String principal, String keytabPath)
-            throws IOException
-    {
+            throws IOException {
         String jaasPath =
                 new File(System.getProperty("java.io.tmpdir")) + File.separator + System.getProperty("user.name")
                         + JAAS_POSTFIX;
@@ -212,53 +188,40 @@ public class LoginUtil
     }
 
     private static void writeJaasFile(String jaasPath, String principal, String keytabPath)
-            throws IOException
-    {
+            throws IOException {
         FileWriter writer = new FileWriter(new File(jaasPath));
-        try
-        {
+        try {
             writer.write(getJaasConfContext(principal, keytabPath));
             writer.flush();
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             throw new IOException("Failed to create jaas.conf File");
-        }
-        finally
-        {
+        } finally {
             writer.close();
         }
     }
 
     private static void deleteJaasFile(String jaasPath)
-            throws IOException
-    {
+            throws IOException {
         File jaasFile = new File(jaasPath);
-        if (jaasFile.exists())
-        {
-            if (!jaasFile.delete())
-            {
+        if (jaasFile.exists()) {
+            if (!jaasFile.delete()) {
                 throw new IOException("Failed to delete exists jaas file.");
             }
         }
     }
 
-    private static String getJaasConfContext(String principal, String keytabPath)
-    {
+    private static String getJaasConfContext(String principal, String keytabPath) {
         Module[] allModule = Module.values();
         StringBuilder builder = new StringBuilder();
-        for (Module modlue : allModule)
-        {
+        for (Module modlue : allModule) {
             builder.append(getModuleContext(principal, keytabPath, modlue));
         }
         return builder.toString();
     }
 
-    private static String getModuleContext(String userPrincipal, String keyTabPath, Module module)
-    {
+    private static String getModuleContext(String userPrincipal, String keyTabPath, Module module) {
         StringBuilder builder = new StringBuilder();
-        if (IS_IBM_JDK)
-        {
+        if (IS_IBM_JDK) {
             builder.append(module.getName()).append(" {").append(LINE_SEPARATOR);
             builder.append(IBM_LOGIN_MODULE).append(LINE_SEPARATOR);
             builder.append("credsType=both").append(LINE_SEPARATOR);
@@ -266,9 +229,7 @@ public class LoginUtil
             builder.append("useKeytab=\"" + keyTabPath + "\"").append(LINE_SEPARATOR);
             builder.append("debug=true;").append(LINE_SEPARATOR);
             builder.append("};").append(LINE_SEPARATOR);
-        }
-        else
-        {
+        } else {
             builder.append(module.getName()).append(" {").append(LINE_SEPARATOR);
             builder.append(SUN_LOGIN_MODULE).append(LINE_SEPARATOR);
             builder.append("useKeyTab=true").append(LINE_SEPARATOR);
@@ -284,29 +245,24 @@ public class LoginUtil
     }
 
     public static void setJaasConf(String loginContextName, String principal, String keytabFile)
-            throws IOException
-    {
-        if ((loginContextName == null) || (loginContextName.length() <= 0))
-        {
+            throws IOException {
+        if ((loginContextName == null) || (loginContextName.length() <= 0)) {
             LOG.error("input loginContextName is invalid.");
             throw new IOException("input loginContextName is invalid.");
         }
 
-        if ((principal == null) || (principal.length() <= 0))
-        {
+        if ((principal == null) || (principal.length() <= 0)) {
             LOG.error("input principal is invalid.");
             throw new IOException("input principal is invalid.");
         }
 
-        if ((keytabFile == null) || (keytabFile.length() <= 0))
-        {
+        if ((keytabFile == null) || (keytabFile.length() <= 0)) {
             LOG.error("input keytabFile is invalid.");
             throw new IOException("input keytabFile is invalid.");
         }
 
         File userKeytabFile = new File(keytabFile);
-        if (!userKeytabFile.exists())
-        {
+        if (!userKeytabFile.exists()) {
             LOG.error("userKeytabFile(" + userKeytabFile.getAbsolutePath() + ") does not exsit.");
             throw new IOException("userKeytabFile(" + userKeytabFile.getAbsolutePath() + ") does not exsit.");
         }
@@ -315,15 +271,13 @@ public class LoginUtil
                 userKeytabFile.getAbsolutePath()));
 
         javax.security.auth.login.Configuration conf = javax.security.auth.login.Configuration.getConfiguration();
-        if (!(conf instanceof JaasConfiguration))
-        {
+        if (!(conf instanceof JaasConfiguration)) {
             LOG.error("javax.security.auth.login.Configuration is not JaasConfiguration.");
             throw new IOException("javax.security.auth.login.Configuration is not JaasConfiguration.");
         }
 
         AppConfigurationEntry[] entrys = conf.getAppConfigurationEntry(loginContextName);
-        if (entrys == null)
-        {
+        if (entrys == null) {
             LOG.error("javax.security.auth.login.Configuration has no AppConfigurationEntry named " + loginContextName
                     + ".");
             throw new IOException("javax.security.auth.login.Configuration has no AppConfigurationEntry named "
@@ -332,40 +286,31 @@ public class LoginUtil
 
         boolean checkPrincipal = false;
         boolean checkKeytab = false;
-        for (int i = 0; i < entrys.length; i++)
-        {
-            if (entrys[i].getOptions().get("principal").equals(principal))
-            {
+        for (int i = 0; i < entrys.length; i++) {
+            if (entrys[i].getOptions().get("principal").equals(principal)) {
                 checkPrincipal = true;
             }
 
-            if (IS_IBM_JDK)
-            {
-                if (entrys[i].getOptions().get("useKeytab").equals(keytabFile))
-                {
+            if (IS_IBM_JDK) {
+                if (entrys[i].getOptions().get("useKeytab").equals(keytabFile)) {
                     checkKeytab = true;
                 }
-            }
-            else
-            {
-                if (entrys[i].getOptions().get("keyTab").equals(keytabFile))
-                {
+            } else {
+                if (entrys[i].getOptions().get("keyTab").equals(keytabFile)) {
                     checkKeytab = true;
                 }
             }
 
         }
 
-        if (!checkPrincipal)
-        {
+        if (!checkPrincipal) {
             LOG.error("AppConfigurationEntry named " + loginContextName + " does not have principal value of "
                     + principal + ".");
             throw new IOException("AppConfigurationEntry named " + loginContextName
                     + " does not have principal value of " + principal + ".");
         }
 
-        if (!checkKeytab)
-        {
+        if (!checkKeytab) {
             LOG.error("AppConfigurationEntry named " + loginContextName + " does not have keyTab value of "
                     + keytabFile + ".");
             throw new IOException("AppConfigurationEntry named " + loginContextName + " does not have keyTab value of "
@@ -375,17 +320,14 @@ public class LoginUtil
     }
 
     public static void setZookeeperServerPrincipal(String zkServerPrincipal)
-            throws IOException
-    {
+            throws IOException {
         System.setProperty(ZOOKEEPER_SERVER_PRINCIPAL_KEY, zkServerPrincipal);
         String ret = System.getProperty(ZOOKEEPER_SERVER_PRINCIPAL_KEY);
-        if (ret == null)
-        {
+        if (ret == null) {
             LOG.error(ZOOKEEPER_SERVER_PRINCIPAL_KEY + " is null.");
             throw new IOException(ZOOKEEPER_SERVER_PRINCIPAL_KEY + " is null.");
         }
-        if (!ret.equals(zkServerPrincipal))
-        {
+        if (!ret.equals(zkServerPrincipal)) {
             LOG.error(ZOOKEEPER_SERVER_PRINCIPAL_KEY + " is " + ret + " is not " + zkServerPrincipal
                     + ".");
             throw new IOException(ZOOKEEPER_SERVER_PRINCIPAL_KEY + " is " + ret + " is not "
@@ -408,14 +350,10 @@ public class LoginUtil
     }
 
     private static void loginHadoop(String principal, String keytabFile)
-            throws IOException
-    {
-        try
-        {
+            throws IOException {
+        try {
             UserGroupInformation.loginUserFromKeytab(principal, keytabFile);
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             LOG.error("login failed with " + principal + " and " + keytabFile + ".");
             LOG.error("perhaps cause 1 is " + LOGIN_FAILED_CAUSE_PASSWORD_WRONG + ".");
             LOG.error("perhaps cause 2 is " + LOGIN_FAILED_CAUSE_TIME_WRONG + ".");
@@ -428,38 +366,31 @@ public class LoginUtil
     }
 
     private static void checkAuthenticateOverKrb()
-            throws IOException
-    {
+            throws IOException {
         UserGroupInformation loginUser = UserGroupInformation.getLoginUser();
         UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
-        if (loginUser == null)
-        {
+        if (loginUser == null) {
             LOG.error("current user is " + currentUser + ", but loginUser is null.");
             throw new IOException("current user is " + currentUser + ", but loginUser is null.");
         }
-        if (!loginUser.equals(currentUser))
-        {
+        if (!loginUser.equals(currentUser)) {
             LOG.error("current user is " + currentUser + ", but loginUser is " + loginUser + ".");
             throw new IOException("current user is " + currentUser + ", but loginUser is " + loginUser + ".");
         }
-        if (!loginUser.hasKerberosCredentials())
-        {
+        if (!loginUser.hasKerberosCredentials()) {
             LOG.error("current user is " + currentUser + " has no Kerberos Credentials.");
             throw new IOException("current user is " + currentUser + " has no Kerberos Credentials.");
         }
-        if (!UserGroupInformation.isLoginKeytabBased())
-        {
+        if (!UserGroupInformation.isLoginKeytabBased()) {
             LOG.error("current user is " + currentUser + " is not Login Keytab Based.");
             throw new IOException("current user is " + currentUser + " is not Login Keytab Based.");
         }
     }
 
     private static boolean checkCurrentUserCorrect(String principal)
-            throws IOException
-    {
+            throws IOException {
         UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
-        if (ugi == null)
-        {
+        if (ugi == null) {
             LOG.error("current user still null.");
             throw new IOException("current user still null.");
         }
@@ -472,13 +403,11 @@ public class LoginUtil
             throw new IOException(e);
         }
 
-        if ((defaultRealm != null) && (defaultRealm.length() > 0))
-        {
+        if ((defaultRealm != null) && (defaultRealm.length() > 0)) {
             StringBuilder realm = new StringBuilder();
             StringBuilder principalWithRealm = new StringBuilder();
             realm.append("@").append(defaultRealm);
-            if (!principal.endsWith(realm.toString()))
-            {
+            if (!principal.endsWith(realm.toString())) {
                 principalWithRealm.append(principal).append(realm);
                 principal = principalWithRealm.toString();
             }
@@ -491,26 +420,22 @@ public class LoginUtil
      * copy from hbase zkutil 0.94&0.98 A JAAS configuration that defines the login modules that we want to use for
      * login.
      */
-    private static class JaasConfiguration extends javax.security.auth.login.Configuration
-    {
+    private static class JaasConfiguration extends javax.security.auth.login.Configuration {
         private static final Map<String, String> BASIC_JAAS_OPTIONS = new HashMap<String, String>();
-        static
-        {
+
+        static {
             String jaasEnvVar = System.getenv("HBASE_JAAS_DEBUG");
-            if (jaasEnvVar != null && "true".equalsIgnoreCase(jaasEnvVar))
-            {
+            if (jaasEnvVar != null && "true".equalsIgnoreCase(jaasEnvVar)) {
                 BASIC_JAAS_OPTIONS.put("debug", "true");
             }
         }
 
         private static final Map<String, String> KEYTAB_KERBEROS_OPTIONS = new HashMap<String, String>();
-        static
-        {
-            if (IS_IBM_JDK)
-            {
+
+        static {
+            if (IS_IBM_JDK) {
                 KEYTAB_KERBEROS_OPTIONS.put("credsType", "both");
-            }
-            else {
+            } else {
                 KEYTAB_KERBEROS_OPTIONS.put("useKeyTab", "true");
                 KEYTAB_KERBEROS_OPTIONS.put("useTicketCache", "false");
                 KEYTAB_KERBEROS_OPTIONS.put("doNotPrompt", "true");
@@ -521,12 +446,11 @@ public class LoginUtil
         }
 
 
-
         private static final AppConfigurationEntry KEYTAB_KERBEROS_LOGIN = new AppConfigurationEntry(
                 KerberosUtil.getKrb5LoginModuleName(), LoginModuleControlFlag.REQUIRED, KEYTAB_KERBEROS_OPTIONS);
 
         private static final AppConfigurationEntry[] KEYTAB_KERBEROS_CONF =
-                new AppConfigurationEntry[] {KEYTAB_KERBEROS_LOGIN};
+                new AppConfigurationEntry[]{KEYTAB_KERBEROS_LOGIN};
 
         private javax.security.auth.login.Configuration baseConfig;
 
@@ -539,19 +463,14 @@ public class LoginUtil
         private final String principal;
 
 
-        public JaasConfiguration(String loginContextName, String principal, String keytabFile) throws IOException
-        {
+        public JaasConfiguration(String loginContextName, String principal, String keytabFile) throws IOException {
             this(loginContextName, principal, keytabFile, keytabFile == null || keytabFile.length() == 0);
         }
 
-        private JaasConfiguration(String loginContextName, String principal, String keytabFile, boolean useTicketCache) throws IOException
-        {
-            try
-            {
+        private JaasConfiguration(String loginContextName, String principal, String keytabFile, boolean useTicketCache) throws IOException {
+            try {
                 this.baseConfig = javax.security.auth.login.Configuration.getConfiguration();
-            }
-            catch (SecurityException e)
-            {
+            } catch (SecurityException e) {
                 this.baseConfig = null;
             }
             this.loginContextName = loginContextName;
@@ -564,16 +483,11 @@ public class LoginUtil
                     + " useTicketCache=" + useTicketCache + " keytabFile=" + keytabFile);
         }
 
-        private void initKerberosOption() throws IOException
-        {
-            if (!useTicketCache)
-            {
-                if(IS_IBM_JDK)
-                {
+        private void initKerberosOption() throws IOException {
+            if (!useTicketCache) {
+                if (IS_IBM_JDK) {
                     KEYTAB_KERBEROS_OPTIONS.put("useKeytab", keytabFile);
-                }
-                else
-                {
+                } else {
                     KEYTAB_KERBEROS_OPTIONS.put("keyTab", keytabFile);
                     KEYTAB_KERBEROS_OPTIONS.put("useKeyTab", "true");
                     KEYTAB_KERBEROS_OPTIONS.put("useTicketCache", useTicketCache ? "true" : "false");
@@ -582,10 +496,8 @@ public class LoginUtil
             KEYTAB_KERBEROS_OPTIONS.put("principal", principal);
         }
 
-        public AppConfigurationEntry[] getAppConfigurationEntry(String appName)
-        {
-            if (loginContextName.equals(appName))
-            {
+        public AppConfigurationEntry[] getAppConfigurationEntry(String appName) {
+            if (loginContextName.equals(appName)) {
                 return KEYTAB_KERBEROS_CONF;
             }
             if (baseConfig != null)
