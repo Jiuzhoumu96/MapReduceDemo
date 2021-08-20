@@ -32,6 +32,7 @@ public class WordCountReducer extends Reducer<Text, IntWritable, Text, IntWritab
         }
         outV.set(sum);
         // 写出
+        System.out.println(">>>>>> key = " + key + ",outV= " + outV);
         context.write(key, outV);
     }
 }
