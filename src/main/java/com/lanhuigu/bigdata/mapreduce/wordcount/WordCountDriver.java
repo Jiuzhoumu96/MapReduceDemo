@@ -7,7 +7,8 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -26,7 +27,7 @@ public class WordCountDriver {
     public static final String JAVA_SECURITY_KRB5_CONF = "java.security.krb5.conf";
     public static final String PRINCIPAL = "security.kerberos.login.principal";
     public static final String KEYTAB = "security.kerberos.login.keytab";
-    private static Logger logger = Logger.getLogger(WordCountDriver.class);
+    private static Logger logger = LoggerFactory.getLogger(WordCountDriver.class);
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 

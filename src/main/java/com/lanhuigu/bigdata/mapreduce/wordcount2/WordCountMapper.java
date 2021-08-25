@@ -4,7 +4,8 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -20,7 +21,7 @@ import java.io.IOException;
  * VALUEOUT, map阶段输出的value类型：IntWritable
  */
 public class WordCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
-    private static Logger logger = Logger.getLogger(WordCountMapper.class);
+    private static Logger logger = LoggerFactory.getLogger(WordCountMapper.class);
 
     private Text outK = new Text();
     private IntWritable outV = new IntWritable(1);
